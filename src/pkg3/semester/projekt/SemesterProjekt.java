@@ -7,6 +7,7 @@ import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.InetSocketAddress;
+import java.util.Map;
 
 /**
  * @author Lars Mortensen
@@ -20,15 +21,15 @@ public class SemesterProjekt {
       ip = args[0];
     }
     HttpServer server = HttpServer.create(new InetSocketAddress(ip,port), 0);
-   // server.createContext("/welcome", new RequestHandler());
-    server.createContext("/headers", new RequestHandler());
+    server.createContext("/welcome", new RequestHandlerWelcome());
+    server.createContext("/headers", new RequestHandlerHeaders());
     server.setExecutor(null); // Use the default executor
     server.start();
     System.out.println("Server started, listening on port: "+port);
   }
   
  
-  static class RequestHandler implements HttpHandler {
+  static class RequestHandlerWelcome implements HttpHandler {
     @Override
     public void handle(HttpExchange he) throws IOException {
       String response = "Welcome to my very first almost home made Web Server :-)";
@@ -52,11 +53,15 @@ public class SemesterProjekt {
       }
     }
   }
-    static class RequestHandler implements HttpHandler {
+    static class RequestHandlerHeaders implements HttpHandler {
     @Override
     public void handle(HttpExchange he) throws IOException {
       String response = "Welcome to headers)";
-      StringBuilder sb = new StringBuilder();
+      Map m =he.getResponseHeaders();
+      Headers h = he.getResponseHeaders();
+      String lol = "Hej";
+      
+       StringBuilder sb = new StringBuilder();
       sb.append("<!DOCTYPE html>\n");
       sb.append("<html>\n");
       sb.append("<head>\n");
@@ -66,15 +71,16 @@ public class SemesterProjekt {
       sb.append("<body>\n");
       sb.append("<h2>Headers\n");
       sb.append("<table border=\"1\" style=\"width:300px\">\n");
-      sb.append("<tr>");
-      sb.append("<td>Jill</td>");
-      sb.append("<td>Smith</td>");
-      sb.append("<td>50</td>");
       
+      for(String key : he.getRequestHeaders().keySet() )
+      {
+      sb.append("<tr>");
+      sb.append("<td>"+key+"</td>");
+      sb.append("<td>"+he.getRequestHeaders().get(key)+"</td>");
+      }
       sb.append("</body>\n");
       sb.append("</html>\n");
       response = sb.toString(); 
-      Headers h = he.getResponseHeaders();
       h.add("Content-type", "text/html"); 
       he.sendResponseHeaders(200, response.length());
       try (PrintWriter pw = new PrintWriter(he.getResponseBody())) {
