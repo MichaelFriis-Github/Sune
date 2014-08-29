@@ -24,7 +24,8 @@ public class SemesterProjekt {
     server.start();
     System.out.println("Server started, listening on port: "+port);
   }
-
+  
+ 
   static class RequestHandler implements HttpHandler {
     @Override
     public void handle(HttpExchange he) throws IOException {
