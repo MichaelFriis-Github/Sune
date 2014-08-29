@@ -20,7 +20,8 @@ public class SemesterProjekt {
       ip = args[0];
     }
     HttpServer server = HttpServer.create(new InetSocketAddress(ip,port), 0);
-    server.createContext("/welcome", new RequestHandler());
+   // server.createContext("/welcome", new RequestHandler());
+    server.createContext("/headers", new RequestHandler());
     server.setExecutor(null); // Use the default executor
     server.start();
     System.out.println("Server started, listening on port: "+port);
@@ -51,4 +52,35 @@ public class SemesterProjekt {
       }
     }
   }
+    static class RequestHandler implements HttpHandler {
+    @Override
+    public void handle(HttpExchange he) throws IOException {
+      String response = "Welcome to headers)";
+      StringBuilder sb = new StringBuilder();
+      sb.append("<!DOCTYPE html>\n");
+      sb.append("<html>\n");
+      sb.append("<head>\n");
+      sb.append("<title>My fancy Web Site</title>\n");
+      sb.append("<meta charset='UTF-8'>\n");
+      sb.append("</head>\n");
+      sb.append("<body>\n");
+      sb.append("<h2>Headers\n");
+      sb.append("<table border=\"1\" style=\"width:300px\">\n");
+      sb.append("<tr>");
+      sb.append("<td>Jill</td>");
+      sb.append("<td>Smith</td>");
+      sb.append("<td>50</td>");
+      
+      sb.append("</body>\n");
+      sb.append("</html>\n");
+      response = sb.toString(); 
+      Headers h = he.getResponseHeaders();
+      h.add("Content-type", "text/html"); 
+      he.sendResponseHeaders(200, response.length());
+      try (PrintWriter pw = new PrintWriter(he.getResponseBody())) {
+        pw.print(response); //What happens if we use a println instead of print --> Explain
+      }
+    }
+  }
+  
 }
