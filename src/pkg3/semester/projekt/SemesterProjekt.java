@@ -12,7 +12,7 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.InetSocketAddress;
 import java.util.Map;
-import java.util.logging.Handler;
+import java.util.Scanner;
 
 /**
  * @author Lars Mortensen
@@ -22,7 +22,6 @@ public class SemesterProjekt {
     static int port = 8080;
     static String ip = "127.0.0.1";
 
-
     public static void main(String[] args) throws Exception {
         if (args.length == 2) {
             port = Integer.parseInt(args[0]);
@@ -31,7 +30,8 @@ public class SemesterProjekt {
         HttpServer server = HttpServer.create(new InetSocketAddress(ip, port), 0);
         server.createContext("/welcome", new RequestHandlerWelcome());
         server.createContext("/headers", new RequestHandlerHeaders());
-        server.createContext("/test", new RequestHandlerTest());
+        server.createContext("/form", new RequestHandlerForm());
+        server.createContext("/parameters", new RequestHandlerParameters());
         server.setExecutor(null); // Use the default executor
         server.start();
         System.out.println("Server started, listening on port: " + port);
@@ -99,25 +99,64 @@ public class SemesterProjekt {
         }
     }
 
-    static class RequestHandlerTest implements HttpHandler {
-    
-    String contentFolder = "public/tables.html";
-        
-    public void handle(HttpExchange he) throws IOException {
-        File file = new File(contentFolder);
-        byte[] bytesToSend = new byte[(int) file.length()];
-        try {
-            BufferedInputStream bis = new BufferedInputStream(new FileInputStream(file));
-            bis.read(bytesToSend, 0, bytesToSend.length);
+    static class RequestHandlerForm implements HttpHandler {
 
-        } catch (IOException ie) {
-            ie.printStackTrace();
-        }
-        he.sendResponseHeaders(200, bytesToSend.length);
-        try (OutputStream os = he.getResponseBody()) {
-            os.write(bytesToSend, 0, bytesToSend.length);
+        String contentFolder = "public/tables.html";
+
+        public void handle(HttpExchange he) throws IOException {
+            File file = new File(contentFolder);
+            byte[] bytesToSend = new byte[(int) file.length()];
+            try {
+                BufferedInputStream bis = new BufferedInputStream(new FileInputStream(file));
+                bis.read(bytesToSend, 0, bytesToSend.length);
+
+            } catch (IOException ie) {
+                ie.printStackTrace();
+            }
+            he.sendResponseHeaders(200, bytesToSend.length);
+            try (OutputStream os = he.getResponseBody()) {
+                os.write(bytesToSend, 0, bytesToSend.length);
+            }
         }
     }
 
-}
+    static class RequestHandlerParameters implements HttpHandler {
+
+        public void handle(HttpExchange he) throws IOException {
+
+            String response = "";
+
+            StringBuilder sb = new StringBuilder();
+            sb.append("<!DOCTYPE html>\n");
+            sb.append("<html>\n");
+            sb.append("<head>\n");
+            sb.append("<title>My fancy Web Site</title>\n");
+            sb.append("<meta charset='UTF-8'>\n");
+            sb.append("</head>\n");
+            sb.append("<h2>Headers\n");
+            sb.append("</h2>\n");
+            sb.append("<body>\n");
+            sb.append("<p>Method is: " + he.getRequestMethod() + "</p>\n");
+            sb.append("<p>Get-Parameters: " + he.getRequestURI().getQuery() + "</p>\n");
+            sb.append(" <form action=\"/parameters\" method=\"GET\">\n"
+                    + "            <input type=\"text\" name=\"first\" placeholder=\"First name\"/>\n"
+                    + "            <input type=\"text\" name=\"last\" placeholder=\"Last name\"/>\n"
+                    + "            <input type=\"submit\" />\n"
+                    + "        </form>");
+            Scanner scan = new Scanner(he.getRequestBody());
+            while (scan.hasNext()) {
+                sb.append("<p>Request body, with Post-parameters: " + scan.nextLine() + "</p>\n");
+                sb.append("</br>");
+            }
+            sb.append("</body>");
+            sb.append("</html>");
+            response = sb.toString();
+
+            he.sendResponseHeaders(200, response.length());
+            try (PrintWriter pw = new PrintWriter(he.getResponseBody())) {
+                pw.print(response); //What happens if we use a println instead of print --> Explain
+            }
+        }
+
+    }
 }
