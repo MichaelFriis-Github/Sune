@@ -30,6 +30,7 @@ public class SemesterProjekt {
     @Override
     public void handle(HttpExchange he) throws IOException {
       String response = "Welcome to my very first almost home made Web Server :-)";
+        System.out.println("TEST");
       he.sendResponseHeaders(200, response.length());
       try (PrintWriter pw = new PrintWriter(he.getResponseBody())) {
         pw.print(response); //What happens if we use a println instead of print --> Explain
